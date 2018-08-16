@@ -12,7 +12,8 @@ class ErrHandler {
         
         
         
-        "ERROR_SYSTEM" => [-100000, "系統錯誤"]
+        "ERROR_SYSTEM" => [-100000, "系統錯誤"],
+        "ERROR_UNKNOWN" => [-1000000, "未知錯誤"]
     );
 
 }

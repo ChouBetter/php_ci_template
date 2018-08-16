@@ -48,7 +48,7 @@ class MY_Controller extends CI_Controller {
         $this->load->library('ErrHandler');
         $err = ErrHandler::$err[$code];
         if (!$err)
-            $err = ErrHandler::$err["ERROR_SYSTEM"];
+            $err = ErrHandler::$err[$code = "ERROR_UNKNOWN"];
         echo json_encode(array_merge(array('result' => $err[0], 'code' => $code, 'content' => $err[1]), $param));
         exit;
     }
