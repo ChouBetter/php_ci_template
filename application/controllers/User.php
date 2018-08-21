@@ -26,7 +26,7 @@ class User extends MY_Controller {
         $content = array('uid' => 1, 'username' => $username);
 
         $jwt = jwt_helper::create($content);
-        header('Authorization: Token ' . $jwt);
+        header('Authorization: ' . $jwt);
 
         $this->echoSuccess(array("user" => $content));
     }
