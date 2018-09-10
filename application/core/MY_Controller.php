@@ -11,13 +11,12 @@ class MY_Controller extends CI_Controller {
 
     public function __construct() {
         parent::__construct();
-        header('Content-Type: application/json; charset=utf-8');
-
+        header('Access-Control-Allow-Origin: *');
         if ($this->input->method(true) == "POST") {
             $content = file_get_contents('php://input');
             $this->DATA = json_decode($content, true);
-            if (!$content || !($this->DATA = json_decode($content, true)))
-                $this->echoErrorParam();
+            //if (!$content || !($this->DATA = json_decode($content, true)))
+            //    $this->echoErrorParam();
         }
 
         $method = $this->router->fetch_method();
@@ -44,39 +43,40 @@ class MY_Controller extends CI_Controller {
         $this->echoError("ERROR_PARAM");
     }
 
-    function echoError($code, $param = array()) {
+    function echoError($code = "ERROR_SYSTEM", $param = array(), $replace = null) {
+        header('Content-Type: application/json; charset=utf-8');
         $this->load->library('ErrHandler');
+        if (!array_key_exists($code, ErrHandler::$err))
+            $code = "ERROR_UNKNOWN";
         $err = ErrHandler::$err[$code];
-        if (!$err)
-            $err = ErrHandler::$err[$code = "ERROR_UNKNOWN"];
-        echo json_encode(array_merge(array('result' => $err[0], 'code' => $code, 'content' => $err[1]), $param));
+        echo json_encode(array_merge(array('result' => $err[0], 'code' => $code, 'content' => $replace ? str_replace('%s', $replace, $err[1]) : $err[1]), $param), JSON_NUMERIC_CHECK);
         exit;
     }
 
     function echoSuccess($response = array()) {
-        echo json_encode(array_merge(array('result' => 0), $response));
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(array_merge(array('result' => 0), $response), JSON_NUMERIC_CHECK);
         exit;
     }
 
-    private function verifySession($sessionId, $accessAction) {
+    private function verifySession($accessAction) {
         $this->load->library('RedisMgr');
         $redis = RedisMgr::instance();
-        if (!$redis->hexists($sessionId, 'expiredTime')) {
+        if (!$redis->hexists($this->sessionKey, 'expiredTime'))
             return 0;
-        }
-        $getRes = $redis->hgetall($sessionId);
+
+        $getRes = $redis->hgetall($this->sessionKey);
         if ($getRes['expiredTime'] > time() && $getRes['enable'] == 1) {
-            $redis->setTimeout($sessionId, SESSION_LIFE_TIME);
-            $redis->hmset($sessionId, array(
+            $redis->setTimeout($this->sessionKey, SESSION_EXPIRE_TIME);
+            $redis->hmset($this->sessionKey, array(
                 "enable" => "1",
                 "accessTime" => time(),
-                "expiredTime" => time() + SESSION_LIFE_TIME,
+                "expiredTime" => time() + SESSION_EXPIRE_TIME,
                 "accessAction" => $accessAction,
             ));
             return $getRes['uid'];
-        } else {
+        } else
             return 0;
-        }
     }
 
 }
