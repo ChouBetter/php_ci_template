@@ -10,8 +10,7 @@ class ErrHandler {
         "ERROR_PASSWORD" => [-3, "密碼錯誤"],
         "ERROR_USER_PASSWORD" => [-5, "帳號或密碼錯誤"],
         
-        
-        
+        "ERROR_INTERNAL" => [-10000, "内部服务器错误"],
         "ERROR_SYSTEM" => [-100000, "系統錯誤"],
         "ERROR_UNKNOWN" => [-1000000, "未知錯誤"]
     );

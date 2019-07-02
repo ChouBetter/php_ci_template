@@ -12,12 +12,8 @@ class MY_Controller extends CI_Controller {
     public function __construct() {
         parent::__construct();
         header('Access-Control-Allow-Origin: *');
-        if ($this->input->method(true) == "POST") {
-            $content = file_get_contents('php://input');
-            $this->DATA = json_decode($content, true);
-            //if (!$content || !($this->DATA = json_decode($content, true)))
-            //    $this->echoErrorParam();
-        }
+        if ($this->input->method(true) == "POST")
+            $this->DATA = json_decode(file_get_contents('php://input'), true);
 
         $method = $this->router->fetch_method();
         if (in_array($method, $this->ignoreVerifyMethods))
@@ -77,6 +73,32 @@ class MY_Controller extends CI_Controller {
             return $getRes['uid'];
         } else
             return 0;
+    }
+
+    protected function _curl($url, $data = null) {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        if ($data) {
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        }
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_NOSIGNAL, 1);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 1000);
+        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 4000);
+        $res = curl_exec($ch);
+        $info = curl_getinfo($ch);
+        $curl_errno = curl_errno($ch);
+        $curl_error = curl_error($ch);
+        curl_close($ch);
+
+        if ($curl_errno > 0)
+            $this->echoError("ERROR_INTERNAL", array("errno" => $curl_errno, "err" => $curl_error));
+        elseif ($info['http_code'] != '200')
+            $this->echoError("ERROR_INTERNAL", array("http_code" => $info['http_code'], "r" => $res));
+
+        return json_decode($res, TRUE);
     }
 
 }
